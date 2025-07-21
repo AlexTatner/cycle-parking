@@ -42,7 +42,9 @@ interface FeatureCollection {
   features: Feature[];
 }
 
-const pool = new Pool();
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 async function loadData() {
   const client = await pool.connect();

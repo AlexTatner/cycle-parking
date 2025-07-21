@@ -1,0 +1,25 @@
+name: Load Cycle Parking Data
+
+on:
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  load-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18' # Use a version compatible with your project
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run data loading script
+        run: npx ts-node --project tsconfig.scripts.json scripts/load-data.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
