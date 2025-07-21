@@ -77,7 +77,7 @@ export default function Map() {
     );
   }, []);
 
-  const mapCenter = userLocation || [51.505, -0.09];
+  const mapCenter: L.LatLngExpression = userLocation || [51.505, -0.09];
 
   return (
     <MapContainer center={mapCenter} zoom={13} style={{ height: '100vh', width: '100%' }}>
