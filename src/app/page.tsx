@@ -1,9 +1,9 @@
-import ClientMap from '@/app/components/ClientMap';
+import DynamicMap from '@/app/components/DynamicMap';
 
 export default function Home() {
   return (
     <main>
-      <ClientMap />
+      <DynamicMap />
     </main>
   );
 }
