@@ -4,7 +4,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const pool = new Pool();
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 export async function GET(request: NextRequest) {
   const client = await pool.connect();
@@ -12,6 +14,21 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const lat = searchParams.get('lat');
     const lon = searchParams.get('lon');
+
+    const query = `
+      SELECT 
+        feature_id, 
+        borough, 
+        prk_cpt, 
+        photo1_url, 
+        prk_cover,
+        prk_secure,
+        prk_locker,
+        prk_hangar,
+        svdate,
+        ST_AsGeoJSON(location) as location
+      FROM cycle_parking
+    `;
 
     let result;
 
@@ -21,15 +38,12 @@ export async function GET(request: NextRequest) {
       const lonFloat = parseFloat(lon);
 
       result = await client.query(
-        `SELECT feature_id, borough, prk_cpt, photo1_url, ST_AsGeoJSON(location) as location
-         FROM cycle_parking
-         ORDER BY location <-> ST_SetSRID(ST_MakePoint($1, $2), 4326)
-         LIMIT 100`,
+        `${query} ORDER BY location <-> ST_SetSRID(ST_MakePoint($1, $2), 4326) LIMIT 100`,
         [lonFloat, latFloat]
       );
     } else {
-      // Otherwise, return the first 100 as before
-      result = await client.query('SELECT feature_id, borough, prk_cpt, photo1_url, ST_AsGeoJSON(location) as location FROM cycle_parking LIMIT 100');
+      // Otherwise, return the first 100
+      result = await client.query(`${query} LIMIT 100`);
     }
 
     const features = result.rows.map(row => {
@@ -42,6 +56,11 @@ export async function GET(request: NextRequest) {
           borough: row.borough,
           capacity: row.prk_cpt,
           photoUrl: row.photo1_url,
+          covered: row.prk_cover,
+          secure: row.prk_secure,
+          locker: row.prk_locker,
+          hangar: row.prk_hangar,
+          lastSurveyed: row.svdate,
         },
       };
     });
