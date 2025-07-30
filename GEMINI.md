@@ -36,3 +36,10 @@ Cyclists with valuable bikes struggle to find safe parking in London. This creat
 *   **Backend:** Node.js, built as **API Routes** within the Next.js application.
 *   **Database:** **PostgreSQL** with the **PostGIS** extension for handling geospatial data.
 *   **Hosting:** **Vercel**, for its seamless integration with Next.js and simplified deployment workflow.
+
+## 7. Feature Roadmap: Interactive Map View
+
+1.  **Dynamic Map Loading:** Update the API to fetch parking locations based on the visible map area. Modify the map to automatically request and display these locations as the user pans and zooms, removing the "Search this area" button.
+2.  **Performance Boost with Clustering:** Implement marker clustering to group nearby parking spots, improving map performance and user experience.
+3.  **Detailed Information View:** Create a modal or sidebar that appears when a user clicks a marker, displaying detailed information about the parking location.
+4.  **Zoomable Image Viewer:** Within the detailed view, make the location's photo clickable to open a full-screen, zoomable image viewer.

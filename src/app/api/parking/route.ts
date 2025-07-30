@@ -12,8 +12,7 @@ export async function GET(request: NextRequest) {
   const client = await pool.connect();
   try {
     const searchParams = request.nextUrl.searchParams;
-    const lat = searchParams.get('lat');
-    const lon = searchParams.get('lon');
+    const bounds = searchParams.get('bounds');
 
     const query = `
       SELECT 
@@ -32,17 +31,14 @@ export async function GET(request: NextRequest) {
 
     let result;
 
-    if (lat && lon) {
-      // If lat and lon are provided, find the 100 nearest parking spots
-      const latFloat = parseFloat(lat);
-      const lonFloat = parseFloat(lon);
-
+    if (bounds) {
+      const [swLng, swLat, neLng, neLat] = bounds.split(',').map(parseFloat);
       result = await client.query(
-        `${query} ORDER BY location <-> ST_SetSRID(ST_MakePoint($1, $2), 4326) LIMIT 100`,
-        [lonFloat, latFloat]
+        `${query} WHERE location && ST_MakeEnvelope($1, $2, $3, $4, 4326) LIMIT 500`,
+        [swLng, swLat, neLng, neLat]
       );
     } else {
-      // Otherwise, return the first 100
+      // Default behavior if no bounds are provided
       result = await client.query(`${query} LIMIT 100`);
     }
 
