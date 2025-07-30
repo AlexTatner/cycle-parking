@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 're
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, memo } from 'react';
 import L from 'leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 import ParkingDetailsModal from './ParkingDetailsModal';
@@ -79,6 +79,19 @@ function MapEvents({ onDataLoad, onZoomChange }: { onDataLoad: (data: ParkingDat
     return null;
 }
 
+const ParkingMarker = memo(function ParkingMarker({ parking, onMarkerClick }) {
+  return (
+    <Marker
+      position={[parking.geometry.coordinates[1], parking.geometry.coordinates[0]]}
+      icon={parkingIcon}
+      eventHandlers={{
+        click: () => onMarkerClick(parking),
+      }}
+    />
+  );
+});
+ParkingMarker.displayName = 'ParkingMarker';
+
 export default function ClientMap() {
   const [features, setFeatures] = useState<Map<string, ParkingLocation>>(new Map());
   const [userLocation, setUserLocation] = useState<L.LatLng | null>(null);
@@ -104,13 +117,15 @@ export default function ClientMap() {
   const handleDataLoad = useCallback((data: ParkingData | null) => {
     if (data) {
       setFeatures(prevFeatures => {
+        let hasChanged = false;
         const newFeatures = new Map(prevFeatures);
         data.features.forEach(feature => {
           if (!newFeatures.has(feature.properties.featureId)) {
             newFeatures.set(feature.properties.featureId, feature);
+            hasChanged = true;
           }
         });
-        return newFeatures;
+        return hasChanged ? newFeatures : prevFeatures;
       });
     } else {
       setFeatures(new Map());
@@ -149,13 +164,10 @@ export default function ClientMap() {
         {zoomLevel >= 14 && (
           <MarkerClusterGroup>
             {markers.map((parking) => (
-              <Marker
+              <ParkingMarker
                 key={parking.properties.featureId}
-                position={[parking.geometry.coordinates[1], parking.geometry.coordinates[0]]}
-                icon={parkingIcon}
-                eventHandlers={{
-                  click: () => handleMarkerClick(parking),
-                }}
+                parking={parking}
+                onMarkerClick={handleMarkerClick}
               />
             ))}
           </MarkerClusterGroup>

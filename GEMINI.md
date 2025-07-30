@@ -43,3 +43,8 @@ Cyclists with valuable bikes struggle to find safe parking in London. This creat
 2.  **Performance Boost with Clustering:** Implement marker clustering to group nearby parking spots, improving map performance and user experience.
 3.  **Detailed Information View:** Create a modal or sidebar that appears when a user clicks a marker, displaying detailed information about the parking location.
 4.  **Zoomable Image Viewer:** Within the detailed view, make the location's photo clickable to open a full-screen, zoomable image viewer.
+
+## 8. Development Workflow
+
+*   **Branching:** All new features and bug fixes will be developed in a dedicated feature or fix branch, not directly on `main`.
+*   **Merging:** Before merging a branch into `main`, I will request confirmation from the user.
