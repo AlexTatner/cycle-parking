@@ -4,10 +4,11 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 're
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import { useEffect, useState, useCallback, useMemo, memo } from 'react';
+import { useEffect, useState, useCallback, useMemo, memo, useRef } from 'react';
 import L from 'leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 import ParkingDetailsModal from './ParkingDetailsModal';
+import Image from 'next/image';
 
 const parkingIcon = L.icon({
   iconUrl: '/images/marker-icon.png',
@@ -45,7 +46,6 @@ interface ParkingData {
   features: ParkingLocation[];
 }
 
-// Component to handle map events and data fetching
 function MapEvents({ onDataLoad, onZoomChange }: { onDataLoad: (data: ParkingData | null) => void, onZoomChange: (zoom: number) => void }) {
     const map = useMap();
 
@@ -54,7 +54,7 @@ function MapEvents({ onDataLoad, onZoomChange }: { onDataLoad: (data: ParkingDat
         onZoomChange(currentZoom);
 
         if (currentZoom < 14) {
-            onDataLoad(null); // Clear data if zoomed out
+            onDataLoad(null);
             return;
         }
 
@@ -91,6 +91,42 @@ const ParkingMarker = memo(function ParkingMarker({ parking, onMarkerClick }: { 
   );
 });
 ParkingMarker.displayName = 'ParkingMarker';
+
+function LocationController({ userLocation }: { userLocation: L.LatLng | null }) {
+    const map = useMap();
+    const hasCenteredRef = useRef(false);
+
+    useEffect(() => {
+        if (userLocation && !hasCenteredRef.current) {
+            map.flyTo(userLocation, 14);
+            hasCenteredRef.current = true;
+        }
+    }, [userLocation, map]);
+
+    const handleGoToUserLocation = () => {
+        if (userLocation) {
+            map.flyTo(userLocation, map.getZoom());
+        }
+    };
+
+    return (
+        <div style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 1000 }}>
+            <button onClick={handleGoToUserLocation} style={{
+                backgroundColor: 'white',
+                border: '2px solid #ccc',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                cursor: 'pointer',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}>
+                <img src="/icons/user-location.png" alt="My Location" style={{ width: '24px', height: '24px' }} />
+            </button>
+        </div>
+    );
+}
 
 export default function ClientMap() {
   const [features, setFeatures] = useState<Map<string, ParkingLocation>>(new Map());
@@ -147,18 +183,17 @@ export default function ClientMap() {
     setSelectedParking(null);
   };
 
-  const initialMapCenter: L.LatLngExpression = userLocation || [51.505, -0.09];
-
   const markers = useMemo(() => Array.from(features.values()), [features]);
 
   return (
     <div style={{ position: 'relative', height: '100vh', width: '100%' }}>
-      <MapContainer center={initialMapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
+      <MapContainer center={[51.505, -0.09]} zoom={13} style={{ height: '100%', width: '100%' }}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         <MapEvents onDataLoad={handleDataLoad} onZoomChange={handleZoomChange} />
+        <LocationController userLocation={userLocation} />
         {zoomLevel >= 14 && (
           <MarkerClusterGroup>
             {markers.map((parking) => (
