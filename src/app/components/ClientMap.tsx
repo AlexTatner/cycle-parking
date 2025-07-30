@@ -79,7 +79,7 @@ function MapEvents({ onDataLoad, onZoomChange }: { onDataLoad: (data: ParkingDat
     return null;
 }
 
-const ParkingMarker = memo(function ParkingMarker({ parking, onMarkerClick }) {
+const ParkingMarker = memo(function ParkingMarker({ parking, onMarkerClick }: { parking: ParkingLocation, onMarkerClick: (parking: ParkingLocation) => void }) {
   return (
     <Marker
       position={[parking.geometry.coordinates[1], parking.geometry.coordinates[0]]}
