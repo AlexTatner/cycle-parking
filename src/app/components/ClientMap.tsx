@@ -95,7 +95,6 @@ ParkingMarker.displayName = 'ParkingMarker';
 export default function ClientMap() {
   const [features, setFeatures] = useState<Map<string, ParkingLocation>>(new Map());
   const [userLocation, setUserLocation] = useState<L.LatLng | null>(null);
-  const [mapCenter, setMapCenter] = useState<L.LatLng>(new L.LatLng(51.505, -0.09));
   const [selectedParking, setSelectedParking] = useState<ParkingLocation | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(13);
@@ -106,7 +105,6 @@ export default function ClientMap() {
         const { latitude, longitude } = position.coords;
         const newLocation = new L.LatLng(latitude, longitude);
         setUserLocation(newLocation);
-        setMapCenter(newLocation);
       },
       () => {
         console.log("Location access denied. Using default location.");
