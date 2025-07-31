@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     if (bounds) {
       const [swLng, swLat, neLng, neLat] = bounds.split(',').map(parseFloat);
       result = await client.query(
-        `${query} WHERE location && ST_MakeEnvelope($1, $2, $3, $4, 4326) LIMIT 500`,
+        `${query} WHERE location && ST_MakeEnvelope($1, $2, $3, $4, 4326) LIMIT 2000`,
         [swLng, swLat, neLng, neLat]
       );
     } else {

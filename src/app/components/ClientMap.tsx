@@ -46,18 +46,10 @@ interface ParkingData {
   features: ParkingLocation[];
 }
 
-function MapEvents({ onDataLoad, onZoomChange }: { onDataLoad: (data: ParkingData | null) => void, onZoomChange: (zoom: number) => void }) {
+function MapEvents({ onDataLoad }: { onDataLoad: (data: ParkingData | null) => void }) {
     const map = useMap();
 
     const fetchData = useCallback(() => {
-        const currentZoom = map.getZoom();
-        onZoomChange(currentZoom);
-
-        if (currentZoom < 14) {
-            onDataLoad(null);
-            return;
-        }
-
         const bounds = map.getBounds();
         const sw = bounds.getSouthWest();
         const ne = bounds.getNorthEast();
@@ -65,7 +57,7 @@ function MapEvents({ onDataLoad, onZoomChange }: { onDataLoad: (data: ParkingDat
             .then((res) => res.json())
             .then((data) => onDataLoad(data))
             .catch(error => console.error("Failed to fetch parking data:", error));
-    }, [map, onDataLoad, onZoomChange]);
+    }, [map, onDataLoad]);
 
     useMapEvents({
         moveend: fetchData,
@@ -92,16 +84,8 @@ const ParkingMarker = memo(function ParkingMarker({ parking, onMarkerClick }: { 
 });
 ParkingMarker.displayName = 'ParkingMarker';
 
-function LocationController({ userLocation }: { userLocation: L.LatLng | null }) {
+function MapControls({ userLocation }: { userLocation: L.LatLng | null }) {
     const map = useMap();
-    const hasCenteredRef = useRef(false);
-
-    useEffect(() => {
-        if (userLocation && !hasCenteredRef.current) {
-            map.flyTo(userLocation, 14);
-            hasCenteredRef.current = true;
-        }
-    }, [userLocation, map]);
 
     const handleGoToUserLocation = () => {
         if (userLocation) {
@@ -109,19 +93,50 @@ function LocationController({ userLocation }: { userLocation: L.LatLng | null })
         }
     };
 
+    const handleZoomIn = () => {
+        map.zoomIn();
+    };
+
+    const handleZoomOut = () => {
+        map.zoomOut();
+    };
+
+    const buttonStyle: React.CSSProperties = {
+        border: 'none',
+        backgroundColor: '#f0f0f0',
+        width: '40px',
+        height: '40px',
+        borderRadius: '50%',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: '0 5px',
+    };
+
+    const zoomButtonStyle: React.CSSProperties = {
+        ...buttonStyle,
+        fontSize: '1.8em',
+        lineHeight: '1',
+    };
+
     return (
-        <div style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 1000 }}>
-            <button onClick={handleGoToUserLocation} style={{
-                backgroundColor: 'white',
-                border: '2px solid #ccc',
-                borderRadius: '50%',
-                width: '40px',
-                height: '40px',
-                cursor: 'pointer',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center'
-            }}>
+        <div style={{
+            position: 'absolute',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            backgroundColor: 'white',
+            borderRadius: '30px',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '5px',
+        }}>
+            <button onClick={handleZoomIn} style={zoomButtonStyle}>+</button>
+            <button onClick={handleZoomOut} style={zoomButtonStyle}>-</button>
+            <button onClick={handleGoToUserLocation} style={buttonStyle}>
                 <img src="/icons/user-location.png" alt="My Location" style={{ width: '24px', height: '24px' }} />
             </button>
         </div>
@@ -133,7 +148,6 @@ export default function ClientMap() {
   const [userLocation, setUserLocation] = useState<L.LatLng | null>(null);
   const [selectedParking, setSelectedParking] = useState<ParkingLocation | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(13);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -166,13 +180,6 @@ export default function ClientMap() {
     }
   }, []);
 
-  const handleZoomChange = useCallback((zoom: number) => {
-    setZoomLevel(zoom);
-    if (zoom < 14) {
-      setFeatures(new Map());
-    }
-  }, []);
-
   const handleMarkerClick = useCallback((parking: ParkingLocation) => {
     setSelectedParking(parking);
     setIsModalOpen(true);
@@ -187,45 +194,28 @@ export default function ClientMap() {
 
   return (
     <div style={{ position: 'relative', height: '100vh', width: '100%' }}>
-      <MapContainer center={[51.505, -0.09]} zoom={13} style={{ height: '100%', width: '100%' }}>
+      <MapContainer center={[51.505, -0.09]} zoom={13} style={{ height: '100%', width: '100%' }} zoomControl={false}>
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         />
-        <MapEvents onDataLoad={handleDataLoad} onZoomChange={handleZoomChange} />
-        <LocationController userLocation={userLocation} />
-        {zoomLevel >= 14 && (
-          <MarkerClusterGroup>
-            {markers.map((parking) => (
-              <ParkingMarker
-                key={parking.properties.featureId}
-                parking={parking}
-                onMarkerClick={handleMarkerClick}
-              />
-            ))}
-          </MarkerClusterGroup>
-        )}
+        <MapEvents onDataLoad={handleDataLoad} />
+        <MapControls userLocation={userLocation} />
+        <MarkerClusterGroup>
+          {markers.map((parking) => (
+            <ParkingMarker
+              key={parking.properties.featureId}
+              parking={parking}
+              onMarkerClick={handleMarkerClick}
+            />
+          ))}
+        </MarkerClusterGroup>
         {userLocation && (
           <Marker position={userLocation} icon={userIcon}>
             <Popup>You are here</Popup>
           </Marker>
         )}
       </MapContainer>
-      {zoomLevel < 14 && (
-        <div style={{
-          position: 'absolute',
-          top: '10px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1000,
-          padding: '10px 20px',
-          backgroundColor: 'white',
-          borderRadius: '5px',
-          border: '1px solid #ccc',
-        }}>
-          Zoom in to see parking locations
-        </div>
-      )}
       <ParkingDetailsModal
         open={isModalOpen}
         onClose={handleCloseModal}

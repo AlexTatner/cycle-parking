@@ -48,3 +48,4 @@ Cyclists with valuable bikes struggle to find safe parking in London. This creat
 
 *   **Branching:** All new features and bug fixes will be developed in a dedicated feature or fix branch, not directly on `main`.
 *   **Merging:** Before merging a branch into `main`, I will request confirmation from the user.
+*   **Panda CSS:** When working with Panda CSS, always use the `npm run panda:css` command to generate the necessary CSS files.

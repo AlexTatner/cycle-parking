@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prepare": "panda codegen",
+    "panda:css": "panda codegen"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -25,7 +27,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
+    "@pandacss/dev": "^0.54.0",
     "@types/leaflet": "^1.9.20",
     "@types/node": "^20",
     "@types/pg": "^8.15.4",
@@ -33,7 +35,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.2",
-    "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5"
