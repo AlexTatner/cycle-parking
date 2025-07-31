@@ -84,12 +84,24 @@ const ParkingMarker = memo(function ParkingMarker({ parking, onMarkerClick }: { 
 });
 ParkingMarker.displayName = 'ParkingMarker';
 
+function SetViewToUserLocation({ userLocation }: { userLocation: L.LatLng | null }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (userLocation) {
+            map.flyTo(userLocation, 16);
+        }
+    }, [userLocation, map]);
+
+    return null;
+}
+
 function MapControls({ userLocation }: { userLocation: L.LatLng | null }) {
     const map = useMap();
 
     const handleGoToUserLocation = () => {
         if (userLocation) {
-            map.flyTo(userLocation, map.getZoom());
+            map.flyTo(userLocation, 16);
         }
     };
 
@@ -194,12 +206,13 @@ export default function ClientMap() {
 
   return (
     <div style={{ position: 'relative', height: '100vh', width: '100%' }}>
-      <MapContainer center={[51.505, -0.09]} zoom={13} style={{ height: '100%', width: '100%' }} zoomControl={false}>
+      <MapContainer center={[51.505, -0.09]} zoom={16} style={{ height: '100%', width: '100%' }} zoomControl={false}>
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         />
         <MapEvents onDataLoad={handleDataLoad} />
+        <SetViewToUserLocation userLocation={userLocation} />
         <MapControls userLocation={userLocation} />
         <MarkerClusterGroup>
           {markers.map((parking) => (
